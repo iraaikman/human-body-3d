@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f5f0" />
+    <meta
+      name="description"
+      content="Explore the human body in 3D. Discover real anatomical structures, peel back body systems, and see how everything connects."
+    />
+    <title>Human Atlas — Every part. Connected.</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three.module.min.js" } }
+    </script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to anatomy explorer</a>
+    <header class="header">
+      <a class="brand" href="./" aria-label="Human Atlas home"
+        ><span class="brand-symbol">✳</span
+        ><span
+          >human<span class="brand-light">atlas</span
+          ><small>THE ANATOMY OF US</small></span
+        ></a
+      >
+      <nav class="top-nav" aria-label="Main navigation">
+        <button class="nav-button active" data-mode="explore">Explore</button
+        ><button class="nav-button" data-mode="learn">Guided learning</button
+        ><button class="nav-button" data-mode="quiz">
+          Test your knowledge <span class="nav-dot"></span>
+        </button>
+      </nav>
+      <div class="header-actions">
+        <span class="edition">INTERACTIVE ATLAS <span>01</span></span
+        ><button
+          class="icon-button"
+          id="help-button"
+          title="Help and sources"
+          aria-label="Help and sources"
+        >
+          ?</button
+        ><button
+          class="icon-button mobile-only"
+          id="mobile-menu"
+          aria-label="Toggle systems panel"
+        >
+          ☰
+        </button>
+      </div>
+    </header>
+    <main id="main" class="app-layout">
+      <aside class="sidebar" aria-label="Anatomical systems">
+        <div class="sidebar-heading">
+          <span class="eyebrow">EXPLORER</span
+          ><span class="small-pill">11 systems</span>
+        </div>
+        <label class="search-box"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m16 16 4 4" /></svg
+          ><input
+            id="search"
+            type="search"
+            placeholder="Find a structure…"
+            autocomplete="off"
+            aria-label="Search anatomical structures"
+          /><kbd>/</kbd></label
+        >
+        <div id="search-results" class="search-results" hidden></div>
+        <div class="systems-heading">
+          <h2>Body systems</h2>
+          <button id="restore-systems" class="text-button">Reset</button>
+        </div>
+        <p class="sidebar-hint">
+          Select a system to explore. Toggle its eye to show or hide it.
+        </p>
+        <div id="system-list" class="system-list"></div>
+        <div class="sidebar-bottom">
+          <span class="source-mark">◉</span>
+          <div>
+            <strong>Real anatomy. Open knowledge.</strong
+            ><span>BodyParts3D · DBCLS</span>
+          </div>
+          <button
+            class="text-button"
+            id="source-button"
+            aria-label="View anatomical sources"
+          >
+            ↗
+          </button>
+        </div>
+      </aside>
+      <section class="workspace" aria-label="Interactive 3D anatomy viewer">
+        <div id="canvas-container">
+          <canvas
+            id="anatomy-canvas"
+            aria-label="Interactive human anatomy. Drag to rotate, scroll to zoom. Use search and system controls for keyboard-accessible selection."
+            tabindex="0"
+          ></canvas>
+        </div>
+        <div class="workspace-heading">
+          <span class="eyebrow"
+            ><span class="live-dot"></span> A WORLD WITHIN YOU</span
+          >
+          <h1>Every part.<br /><em>Connected.</em></h1>
+          <p id="view-description">
+            Discover the extraordinary in your everyday.
+          </p>
+        </div>
+        <div class="model-badge">
+          <span class="live-dot"></span>Adult male reference
+          <button id="model-info" aria-label="About this reference model">
+            ⓘ
+          </button>
+        </div>
+        <div class="preset-bar" role="group" aria-label="View presets">
+          <button data-preset="anatomy" class="active">Anatomy</button
+          ><button data-preset="surface">Surface</button
+          ><button data-preset="skeleton">Skeleton</button
+          ><button data-preset="organs">Organs</button>
+        </div>
+        <div class="view-tools" role="group" aria-label="Camera controls">
+          <button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button
+          ><button id="zoom-out" title="Zoom out" aria-label="Zoom out">
+            −</button
+          ><span></span
+          ><button
+            id="rotate-toggle"
+            title="Auto rotate"
+            aria-label="Auto rotate"
+            aria-pressed="false"
+          >
+            ⟳</button
+          ><button
+            id="home-view"
+            title="Reset view (R)"
+            aria-label="Reset view"
+          >
+            ⌂</button
+          ><button
+            id="slice-toggle"
+            title="Section view"
+            aria-label="Toggle section view"
+            aria-pressed="false"
+          >
+            ◩</button
+          ><button
+            id="screenshot"
+            title="Download view"
+            aria-label="Download current view as image"
+          >
+            ↓
+          </button>
+        </div>
+        <div id="slice-panel" class="slice-panel" hidden>
+          <div class="slice-title">
+            <strong>Section view</strong
+            ><button id="slice-close" aria-label="Close section view">×</button>
+          </div>
+          <label for="slice-axis">Cut plane</label
+          ><select id="slice-axis">
+            <option value="sagittal">Sagittal · left / right</option>
+            <option value="coronal">Coronal · front / back</option>
+            <option value="axial">Axial · top / bottom</option></select
+          ><input
+            id="slice-position"
+            type="range"
+            min="0"
+            max="100"
+            value="50"
+            aria-label="Section plane position"
+          /><small>Open surface cut; not a tissue scan.</small>
+        </div>
+        <div class="orientation">
+          <span id="view-direction">ANTERIOR</span>
+          <div>
+            <button data-angle="front" title="Front view">A</button
+            ><button data-angle="left" title="Left side">L</button
+            ><button data-angle="back" title="Back view">P</button
+            ><button data-angle="right" title="Right side">R</button>
+          </div>
+        </div>
+        <div id="hover-label" class="hover-label" hidden></div>
+        <div id="selection-label" class="selection-label" hidden></div>
+        <div class="explosion-card">
+          <div class="explosion-title">
+            <span class="explode-icon">◇</span>
+            <div>
+              <strong>Take a closer look</strong
+              ><span>Separate the structures. See the connections.</span>
+            </div>
+            <button id="explode-toggle" aria-pressed="false">
+              Explode view <span>↗</span>
+            </button>
+          </div>
+          <div class="range-row">
+            <span>Assembled</span
+            ><input
+              type="range"
+              id="explode"
+              min="0"
+              max="100"
+              value="0"
+              aria-label="Explode anatomical structures"
+            /><span id="explode-value">0%</span>
+          </div>
+        </div>
+        <div class="canvas-footer">
+          <span
+            >↔ Drag to rotate <i>·</i> Scroll to zoom <i>·</i> Click to
+            discover</span
+          ><span id="mesh-count">Loading anatomy…</span>
+        </div>
+        <div id="loading" class="loading-overlay">
+          <div class="loading-orbit">✳</div>
+          <strong>Getting under the surface</strong
+          ><span id="loading-message">Loading the anatomy atlas…</span>
+          <div class="progress-track"><div id="loading-progress"></div></div>
+        </div>
+      </section>
+      <aside class="inspector" aria-label="Structure information">
+        <div class="inspector-top">
+          <span class="eyebrow" id="panel-eyebrow">YOUR FIELD GUIDE</span
+          ><button
+            id="clear-selection"
+            class="icon-button"
+            aria-label="Clear selection"
+            hidden
+          >
+            ×
+          </button>
+        </div>
+        <div id="panel-content"></div>
+      </aside>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="info-dialog">
+      <div class="dialog-top">
+        <span class="eyebrow">THE HUMAN ATLAS</span
+        ><button
+          id="close-dialog"
+          class="icon-button"
+          aria-label="Close information"
+        >
+          ×
+        </button>
+      </div>
+      <div id="dialog-content"></div>
+    </dialog>
+    <noscript
+      >This interactive atlas needs JavaScript. Enable it to explore the 3D
+      model.</noscript
+    >
+  </body>
+</html>
